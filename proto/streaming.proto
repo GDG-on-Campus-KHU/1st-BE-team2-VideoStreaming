@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package streaming;
+
+option go_package = ".";
+
+service VideoStreaming {
+  rpc StreamVideo(stream VideoChunk) returns (stream VideoChunk) {}
+}
+
+message VideoChunk {
+  bytes data = 1;
+  int64 timestamp = 2;
+}

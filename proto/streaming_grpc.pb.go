@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	VideoStreaming_ListVideos_FullMethodName  = "/streaming.VideoStreaming/ListVideos"
 	VideoStreaming_StreamVideo_FullMethodName = "/streaming.VideoStreaming/StreamVideo"
 )
 
@@ -26,7 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VideoStreamingClient interface {
-	StreamVideo(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[VideoChunk, VideoChunk], error)
+	ListVideos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*VideoList, error)
+	StreamVideo(ctx context.Context, in *VideoRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[VideoChunk], error)
 }
 
 type videoStreamingClient struct {
@@ -37,24 +39,41 @@ func NewVideoStreamingClient(cc grpc.ClientConnInterface) VideoStreamingClient {
 	return &videoStreamingClient{cc}
 }
 
-func (c *videoStreamingClient) StreamVideo(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[VideoChunk, VideoChunk], error) {
+func (c *videoStreamingClient) ListVideos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*VideoList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VideoList)
+	err := c.cc.Invoke(ctx, VideoStreaming_ListVideos_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoStreamingClient) StreamVideo(ctx context.Context, in *VideoRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[VideoChunk], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &VideoStreaming_ServiceDesc.Streams[0], VideoStreaming_StreamVideo_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[VideoChunk, VideoChunk]{ClientStream: stream}
+	x := &grpc.GenericClientStream[VideoRequest, VideoChunk]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type VideoStreaming_StreamVideoClient = grpc.BidiStreamingClient[VideoChunk, VideoChunk]
+type VideoStreaming_StreamVideoClient = grpc.ServerStreamingClient[VideoChunk]
 
 // VideoStreamingServer is the server API for VideoStreaming service.
 // All implementations must embed UnimplementedVideoStreamingServer
 // for forward compatibility.
 type VideoStreamingServer interface {
-	StreamVideo(grpc.BidiStreamingServer[VideoChunk, VideoChunk]) error
+	ListVideos(context.Context, *Empty) (*VideoList, error)
+	StreamVideo(*VideoRequest, grpc.ServerStreamingServer[VideoChunk]) error
 	mustEmbedUnimplementedVideoStreamingServer()
 }
 
@@ -65,7 +84,10 @@ type VideoStreamingServer interface {
 // pointer dereference when methods are called.
 type UnimplementedVideoStreamingServer struct{}
 
-func (UnimplementedVideoStreamingServer) StreamVideo(grpc.BidiStreamingServer[VideoChunk, VideoChunk]) error {
+func (UnimplementedVideoStreamingServer) ListVideos(context.Context, *Empty) (*VideoList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListVideos not implemented")
+}
+func (UnimplementedVideoStreamingServer) StreamVideo(*VideoRequest, grpc.ServerStreamingServer[VideoChunk]) error {
 	return status.Errorf(codes.Unimplemented, "method StreamVideo not implemented")
 }
 func (UnimplementedVideoStreamingServer) mustEmbedUnimplementedVideoStreamingServer() {}
@@ -89,12 +111,34 @@ func RegisterVideoStreamingServer(s grpc.ServiceRegistrar, srv VideoStreamingSer
 	s.RegisterService(&VideoStreaming_ServiceDesc, srv)
 }
 
+func _VideoStreaming_ListVideos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoStreamingServer).ListVideos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoStreaming_ListVideos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoStreamingServer).ListVideos(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _VideoStreaming_StreamVideo_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(VideoStreamingServer).StreamVideo(&grpc.GenericServerStream[VideoChunk, VideoChunk]{ServerStream: stream})
+	m := new(VideoRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(VideoStreamingServer).StreamVideo(m, &grpc.GenericServerStream[VideoRequest, VideoChunk]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type VideoStreaming_StreamVideoServer = grpc.BidiStreamingServer[VideoChunk, VideoChunk]
+type VideoStreaming_StreamVideoServer = grpc.ServerStreamingServer[VideoChunk]
 
 // VideoStreaming_ServiceDesc is the grpc.ServiceDesc for VideoStreaming service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -102,13 +146,17 @@ type VideoStreaming_StreamVideoServer = grpc.BidiStreamingServer[VideoChunk, Vid
 var VideoStreaming_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "streaming.VideoStreaming",
 	HandlerType: (*VideoStreamingServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListVideos",
+			Handler:    _VideoStreaming_ListVideos_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StreamVideo",
 			Handler:       _VideoStreaming_StreamVideo_Handler,
 			ServerStreams: true,
-			ClientStreams: true,
 		},
 	},
 	Metadata: "proto/streaming.proto",

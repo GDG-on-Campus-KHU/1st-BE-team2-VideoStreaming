@@ -4,11 +4,26 @@ package streaming;
 
 option go_package = ".";
 
-service VideoStreaming {
-  rpc StreamVideo(stream VideoChunk) returns (stream VideoChunk) {}
+message Video {
+  string name = 1;
+}
+
+message Empty {}
+
+message VideoList {
+  repeated Video videos = 1;
+}
+
+message VideoRequest {
+  string video_name = 1;
 }
 
 message VideoChunk {
   bytes data = 1;
   int64 timestamp = 2;
+}
+
+service VideoStreaming {
+  rpc ListVideos(Empty) returns (VideoList) {}
+  rpc StreamVideo(VideoRequest) returns (stream VideoChunk) {}
 }

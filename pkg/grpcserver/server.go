@@ -1,53 +1,114 @@
 package grpcserver
 
 import (
+	"encoding/json"
 	"io"
-	"log"
+	"net/http"
+	"os"
+	"path/filepath"
 
 	pb "github.com/kmin1231/proj_grpc/proto"
 	"google.golang.org/grpc"
 )
 
-// defines 'VideoStreamingServer' struct
-// embeds 'UnimplementedVideoStreamingServer' from the generated gRPC code
 type VideoStreamingServer struct {
 	pb.UnimplementedVideoStreamingServer
+	VideoDir string
 }
 
-// defines 'StreamVideo' method for 'VideoStreamingServer' (bidirectional)
-func (s *VideoStreamingServer) StreamVideo(stream pb.VideoStreaming_StreamVideoServer) error {
-	// a loop to process video chunks continuously
+func (s *VideoStreamingServer) StreamVideo(req *pb.VideoRequest, stream pb.VideoStreaming_StreamVideoServer) error {
+	filePath := filepath.Join(s.VideoDir, req.VideoName)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	buffer := make([]byte, 1024*1024)
+
 	for {
-		// receives a video chunk from client
-		in, err := stream.Recv()
-
-		// end of the stream (EOF) -> normal termination of the function
+		n, err := file.Read(buffer)
 		if err == io.EOF {
-			return nil
+			break
 		}
-
 		if err != nil {
 			return err
 		}
 
-		// logs the timestamp of the received video chunk
-		log.Printf("Received video chunk with timestamp: %v", in.Timestamp)
-
-		// sends the received video chunk back to client
-		if err := stream.Send(in); err != nil {
+		if err := stream.Send(&pb.VideoChunk{Data: buffer[:n]}); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func NewServer(videoDir string) *grpc.Server {
+	s := grpc.NewServer()
+	pb.RegisterVideoStreamingServer(s, &VideoStreamingServer{VideoDir: videoDir})
+	return s
+}
+
+func HandleVideoList(videoDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		files, err := filepath.Glob(filepath.Join(videoDir, "*.mp4"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var videoNames []string
+		for _, file := range files {
+			videoNames = append(videoNames, filepath.Base(file))
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(videoNames)
+	}
+}
+
+func HandleVideoStream(videoDir string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		videoName := r.URL.Query().Get("video")
+		if videoName == "" {
+			http.Error(w, "Video name is required", http.StatusBadRequest)
+			return
+		}
+
+		filePath := filepath.Join(videoDir, videoName)
+		file, err := os.Open(filePath)
+		if err != nil {
+			http.Error(w, "Failed to open video file", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		w.Header().Set("Content-Type", "video/mp4")
+
+		buffer := make([]byte, 1024*1024)
+		for {
+			n, err := file.Read(buffer)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				http.Error(w, "Error reading video file", http.StatusInternalServerError)
+				return
+			}
+			_, err = w.Write(buffer[:n])
+			if err != nil {
+				// log.Printf("Error writing to response: %v", err)
+				return
+			}
 		}
 	}
 }
 
-// defines a function to create a new gRPC server
-func NewServer() *grpc.Server {
-	// creates a new instance of a gRPC server
-	s := grpc.NewServer()
+type httpStream struct {
+	w http.ResponseWriter
+}
 
-	// registers the 'VideoStreamingServer' with the created gRPC server
-	pb.RegisterVideoStreamingServer(s, &VideoStreamingServer{})
-
-	// returns the created gRPC server
-	return s
+func (s *httpStream) Send(chunk *pb.VideoChunk) error {
+	_, err := s.w.Write(chunk.Data)
+	return err
 }

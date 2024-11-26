@@ -23,6 +23,8 @@ function loadVideoList() {
         .then(response => response.json())
         .then(videos => {
             const videoList = document.getElementById('videoList');
+            videoList.innerHTML = '' // 기존 리스트 비우기
+            
             videos.forEach(video => {
                 const li = document.createElement('li');
                 li.textContent = video;

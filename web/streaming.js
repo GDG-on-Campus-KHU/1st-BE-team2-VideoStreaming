@@ -1,5 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadVideoList();
+
+    const uploadButton = document.getElementById('uploadButton');
+    const videoUploadInput = document.getElementById('videoUploadInput');
+
+    // 버튼 클릭 시 파일 선택 창 열기
+    uploadButton.addEventListener('click', function(){
+        videoUploadInput.click();
+    });
+
+    // 파일 선택 시 서버로 업로드
+    videoUploadInput.addEventListener("change", function(){
+        const file = videoUploadInput.files[0];
+        if (file){
+            uploadVideo(file);
+        }
+    });
 });
 
 function loadVideoList() {
@@ -7,6 +23,8 @@ function loadVideoList() {
         .then(response => response.json())
         .then(videos => {
             const videoList = document.getElementById('videoList');
+            videoList.innerHTML = '' // 기존 리스트 비우기
+            
             videos.forEach(video => {
                 const li = document.createElement('li');
                 li.textContent = video;
@@ -24,4 +42,23 @@ function playVideo(videoName) {
     const videoPlayer = document.getElementById('videoPlayer');
     videoPlayer.src = `/stream?video=${encodeURIComponent(videoName)}`;
     videoPlayer.play().catch(e => console.error('Error playing video:', e));
+}
+
+function uploadVideo(file){
+    const formData = new FormData();
+    formData.append('video', file);
+    
+    fetch('/upload',{
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => {
+        if (response.ok){
+            console.log("Video Uploaded successfully");
+            loadVideoList(); // 업로드 후 동영상 리스트 refresh
+        } else {
+            console.error('Error uploading video');
+        }
+    })
+    .catch(error => console.error("Error uploading video", error));
 }

@@ -23,3 +23,16 @@ go.work.sum
 
 # env file
 .env
+
+# 민감한 파일
+key.json
+
+# Terraform 관련
+*.tfstate
+*.tfstate.*
+
+# 잠금 파일
+.terraform.lock.hcl
+
+# 로컬 개발 환경 파일
+docker-compose.yaml

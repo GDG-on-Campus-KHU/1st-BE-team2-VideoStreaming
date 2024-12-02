@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 5s  # 데이터 수집 주기
+
+scrape_configs:
+  - job_name: "server"
+    static_configs:
+      - targets: ["server:9000"]  # 서버의 메트릭 엔드포인트

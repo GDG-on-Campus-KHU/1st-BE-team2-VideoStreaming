@@ -5,11 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
 	fmt.Println("Available videos:")
-	videos, err := listVideos("http://localhost:9000/videos")
+
+	// deployment.yaml 에서 정의돼잇음
+	url := os.Getenv("SERVER_URL")
+	if url == "" {
+		log.Fatal("SERVER_URL is not set")
+	}
+	videos, err := listVideos(url + "/videos")
 	if err != nil {
 		log.Fatalf("Failed to get video list: %v", err)
 	}

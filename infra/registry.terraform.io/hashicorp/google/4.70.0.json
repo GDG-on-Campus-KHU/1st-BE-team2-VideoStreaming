@@ -1,0 +1,10 @@
+{
+  "archives": {
+    "windows_amd64": {
+      "hashes": [
+        "h1:g4XHMwZ7y4nEdoHmXoPhyFKc3/qSHtkYIGlkxCV+0Sc="
+      ],
+      "url": "terraform-provider-google_4.70.0_windows_amd64.zip"
+    }
+  }
+}

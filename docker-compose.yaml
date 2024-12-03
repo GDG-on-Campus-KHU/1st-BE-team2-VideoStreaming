@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: cmd/server/Dockerfile
+    ports:
+      - "50051:50051"  # gRPC Server
+      - "9000:9000"   # HTTP Server
+    volumes:
+      - ./videos:/app/videos  # Bind mount for uploaded videos
+      - ./web:/app/web
+    environment:
+      - GRPC_PORT=50051
+      - HTTP_PORT=9000
+
+  client:
+    build:
+      context: .
+      dockerfile: cmd/client/Dockerfile
+    depends_on:
+      - server
+    environment:
+      - SERVER_URL=http://server:9000  # Access server via Docker network
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"  # Prometheus Web UI
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - server
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"  # Grafana Web UI
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  grafana-data:

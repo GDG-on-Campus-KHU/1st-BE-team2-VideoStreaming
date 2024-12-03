@@ -1,5 +1,9 @@
 # gRPC를 활용한 동영상 스트리밍
 
+- 🎬 **Project ID**: <code><b><i>1st-BE-team02-VideoStreaming</i></b></code><br>
+- 👥 **Contributors**: [Eden Min Kim](https://github.com/kmin1231), [SeongHo5356](https://github.com/SeongHo5356)
+
+ 
 ### 프로젝트 개요
 
 - **`gRPC`**(gRPC Remote Procedure Call)을 활용하여 로컬 환경의 동영상 파일을 업로드하고 웹 브라우저에서 재생하는 프로그램

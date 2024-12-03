@@ -24,19 +24,26 @@ go.work.sum
 # env file
 .env
 
-# Terraform 상태 파일 및 백업 파일
-terraform.tfstate
-terraform.tfstate.backup
-*.tfstate.*
-*.backup
-
-# Terraform 작업 디렉토리
-.terraform/
-
-# 개인 키 파일 및 민감한 정보
-key.json
-*.tfvars
-*.tfvars.json
-
 # 로컬 개발 환경 파일
 docker-compose.yaml
+
+# Kubernetes 파일
+*.kubeconfig
+*.crt
+*.key
+
+# Helm 관련 파일
+helm-debug.log
+
+# Terraform 상태 파일 및 백업 파일
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfstate.*
+infra/*.backup
+
+# Terraform 작업 디렉토리
+infra/.terraform/
+
+# 개인 키 파일 및 민감한 정보
+infra/key.json
+infra/terraform.tfvars

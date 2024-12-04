@@ -1,6 +1,6 @@
 # gRPC를 활용한 동영상 스트리밍
 
-- 🎬 **Project ID**: <code><b><i>1st-BE-team02-VideoStreaming</i></b></code><br>
+- 🎬 **Project ID**: <code><b><i>1st-BE-team2-VideoStreaming</i></b></code><br>
 - 👥 **Contributors**: [Eden Min Kim](https://github.com/kmin1231), [SeongHo5356](https://github.com/SeongHo5356)
 
  

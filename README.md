@@ -76,6 +76,7 @@ libprotoc 28.3
 
 
 ### 프로그램 배포 및 관리
+- **`http://104.197.208.245:9000/`**
 - **`🐳Dockerfile`**, **`🐳docker-compose.yaml`**
 
 - **`☸️deployment.yml`**, **`☸️service.yml`** <br>

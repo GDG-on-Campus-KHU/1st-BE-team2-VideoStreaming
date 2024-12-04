@@ -14,6 +14,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+
+// Prometheus Counter Initialization
+// Prometheus 메트릭을 초기화하여 HTTP 요청을 추적할 수 있도록 함
 var (
 	httpRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -24,6 +27,8 @@ var (
 	)
 )
 
+// Prometheus Metrics Middleware
+// 서버 시작 시, Prometheus 메트릭 등록(register)
 func init() {
 	prometheus.MustRegister(httpRequests)
 }
@@ -35,6 +40,7 @@ func metricsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// File Upload Handler
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -65,6 +71,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "File uploaded successfully")
 }
 
+
 func main() {
 	videoDir, _ := filepath.Abs("./videos")
 
@@ -86,6 +93,7 @@ func main() {
 		os.Mkdir("videos", os.ModePerm)
 	}
 
+	// HTTP Request handlers
 	//http.Handle("/", http.FileServer(http.Dir("./web")))
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/videos", grpcserver.HandleVideoList(videoDir))

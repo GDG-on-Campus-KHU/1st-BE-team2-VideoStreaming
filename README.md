@@ -72,6 +72,8 @@ libprotoc 28.3
 [terminal #2]
 ```$ go run cmd/client/main.go```
 
+<img src="https://drive.google.com/uc?id=1GHi352N-dwArBqhRoIa4LE0UcDJ-mcJR" alt="demo_screenshot" width=60%>
+
 <br>
 
 

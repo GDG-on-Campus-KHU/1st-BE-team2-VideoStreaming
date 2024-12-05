@@ -6,7 +6,7 @@
  
 ### 프로젝트 개요
 
-- **`gRPC`**(gRPC Remote Procedure Call)을 활용하여 로컬 환경의 동영상 파일을 업로드하고 웹 브라우저에서 재생하는 프로그램
+- **`gRPC`** 를 활용하여 로컬 환경의 동영상 파일을 업로드하고 웹 브라우저에서 재생하는 프로그램
 
 - **`Go`** 언어로 작성
 
@@ -72,7 +72,18 @@ libprotoc 28.3
 [terminal #2]
 ```$ go run cmd/client/main.go```
 
+<br>
+
+→ **`🐳Docker`** 적용 이후
+
+[terminal]
+```$ docker compose up -d```
+
+[web browser]
+[http://localhost:9000/](http://localhost:9000)
+
 <img src="https://drive.google.com/uc?id=1GHi352N-dwArBqhRoIa4LE0UcDJ-mcJR" alt="demo_screenshot" width=60%>
+
 
 <br>
 
